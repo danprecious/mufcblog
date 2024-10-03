@@ -1,0 +1,68 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+*{
+    /* border: 1px solid cyan; */
+ 
+}
+
+
+:root {
+  --background-color: white;
+  --background-shade: rgb(231, 231, 231);
+  --primary-color: red;
+  --secondary-color: ;
+  --text-color: black;
+}
+
+@media (prefers-color-scheme: dark){
+  :root {
+    --background-color: rgb(7, 6, 6);
+    --background-shade: rgb(22, 21, 21);
+    --primary-color: red;
+    --secondary-color: ;
+    --text-color: white;
+  }
+}
+
+
+@layer utilities {
+  .input {
+    @apply py-3 text-left  px-3  rounded-md w-full bg-transparent border border-bgShade outline-textcolor outline-[1px];
+  }
+  .btn {
+    @apply p-3 flex items-center bg-bgShade rounded-md;
+  }
+}
+
+
+::-webkit-scrollbar{
+ display: none;
+  color: rgb(255, 255, 255);
+ color: rgb(209, 172, 172);
+ color: rgb(59, 58, 58);
+
+}
+.follow{  
+  transform: rotate(0deg);
+}
+
+@media (min-width: 768px) {
+  .follow{
+    transform: rotate(-90deg);
+  }
+}
+
+.custom-grid{
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+  justify-items: center;
+  justify-content: center;
+  gap: 4em;
+}
+
+.active{
+  color: rgb(175, 6, 6);
+  
+}

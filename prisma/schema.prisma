@@ -1,0 +1,190 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String          @id @default(auto()) @map("_id") @db.ObjectId
+  email         String          @unique
+  password      String
+  name          String
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  accounts      Account[]
+  comments      Comment[]
+  sessions      Session[]
+  Authenticator Authenticator[]
+}
+
+model Account {
+  id                String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String  @db.ObjectId
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.String
+  access_token      String? @db.String
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.String
+  session_state     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  sessionToken String   @unique
+  userId       String   @db.ObjectId
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model VerificationToken {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// Optional for WebAuthn support
+model Authenticator {
+  credentialID         String  @id @map("_id")
+  userId               String  @db.ObjectId
+  providerAccountId    String
+  credentialPublicKey  String
+  counter              Int
+  credentialDeviceType String
+  credentialBackedUp   Boolean
+  transports           String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, credentialID])
+}
+
+model Admin {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId // Unique identifier with MongoDB's ObjectId type
+  email     String    @unique
+  password  String
+  role      AdminRole @default(USER) // Role for admin privileges
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  posts     Post[] // Relation to posts authored by the admin
+  authors   Author[]  @relation("AdminAuthor") // Relation to authors
+
+  @@map("admins")
+}
+
+model Moderator {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId // Unique identifier
+  email      String   @unique
+  password   String
+  accessKey  String   @unique // Key given by the admin to login
+  createdAt  DateTime @default(now())
+  assignedBy String   @db.ObjectId // ID of the Admin who assigned the moderator
+  posts      Post[] // Relation to posts managed by the moderator
+  authors    Author[] @relation("ModeratorAuthor") // Relation to authors
+
+  @@map("moderators")
+}
+
+model Post {
+  id           String      @id @default(auto()) @map("_id") @db.ObjectId // Unique identifier
+  title        String
+  coverImageId String      @db.ObjectId // URL or path to the cover image
+  coverImage   CoverImage? 
+  intro        String?
+  sections     Section[]
+  authorId     String?     @db.ObjectId
+  author       Author?     @relation(fields: [authorId], references: [id], name: "PostAuthor") // Relation to the Author model
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  published    Boolean     @default(false)
+  comments     Comment[] // Relation to the Comment model
+  categories   Category[]  @relation(fields: [categoryIDs], references: [id])
+  categoryIDs  String[]    @db.ObjectId
+  adminId      String?     @db.ObjectId
+  Admin        Admin?      @relation(fields: [adminId], references: [id])
+  moderatorId  String?     @db.ObjectId
+  Moderator    Moderator?  @relation(fields: [moderatorId], references: [id])
+
+  @@map("posts")
+}
+
+model CoverImage {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  gridFsId  String
+  filename  String
+  mimetype  String
+  size      Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  postId     String  @unique @db.ObjectId
+  post      Post     @relation(fields: [postId], references: [id])
+}
+
+model Section {
+  id      String  @id @default(auto()) @map("_id") @db.ObjectId // Unique identifier
+  heading String? // Sub-heading title (optional)
+  content String // Content under the sub-heading
+  postId  String  @db.ObjectId
+  post    Post    @relation(fields: [postId], references: [id])
+
+  @@map("sections")
+}
+
+model Comment {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId // Unique identifier
+  content   String // Comment content
+  author    User     @relation(fields: [authorId], references: [id]) // Name or ID of the person commenting
+  createdAt DateTime @default(now())
+  authorId  String   @db.ObjectId
+  postId    String   @db.ObjectId
+  post      Post     @relation(fields: [postId], references: [id])
+
+  @@map("comments")
+}
+
+model Category {
+  id      String   @id @default(auto()) @map("_id") @db.ObjectId // Unique identifier
+  name    String   @unique // Name of the category
+  postIDs String[] @db.ObjectId
+  posts   Post[]   @relation(fields: [postIDs], references: [id])
+
+  @@map("categories")
+}
+
+model Author {
+  id          String     @id @default(auto()) @map("_id") @db.ObjectId // Unique identifier
+  adminId     String?    @db.ObjectId
+  moderatorId String?    @db.ObjectId
+  admin       Admin?     @relation(fields: [adminId], references: [id], name: "AdminAuthor")
+  moderator   Moderator? @relation(fields: [moderatorId], references: [id], name: "ModeratorAuthor")
+  posts       Post[]     @relation("PostAuthor") // Relation to the posts authored by this entity
+
+  @@unique([adminId, moderatorId])
+  @@map("authors")
+}
+
+enum AdminRole {
+  USER
+  SUPERADMIN
+}
