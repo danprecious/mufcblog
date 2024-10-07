@@ -10,7 +10,7 @@ datasource db {
 model User {
   id            String          @id @default(auto()) @map("_id") @db.ObjectId
   email         String          @unique
-  password      String
+  password      String?
   name          String
   emailVerified DateTime?
   image         String?
@@ -154,9 +154,10 @@ model Section {
 model Comment {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId // Unique identifier
   content   String // Comment content
-  author    User     @relation(fields: [authorId], references: [id]) // Name or ID of the person commenting
+  authorName String
+  author    User?     @relation(fields: [authorId], references: [id]) // Name or ID of the person commenting
   createdAt DateTime @default(now())
-  authorId  String   @db.ObjectId
+  authorId  String?   @db.ObjectId
   postId    String   @db.ObjectId
   post      Post     @relation(fields: [postId], references: [id])
 

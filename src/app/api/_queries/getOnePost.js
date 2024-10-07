@@ -15,6 +15,7 @@ export const getOnePost = async (postId) => {
       include: {
         coverImage: true,
         sections: true,
+        comments: true, 
       },
     });
 

@@ -9,10 +9,9 @@ import  { UserAvatar, UserName } from "./avatar";
 export const NavProfileButton = () => {
     return (
       <div className="flex flex-col md:flex-row items-center">
-        click
-        <UserAvatar />
-        <IoMdArrowDropdown className="p-0 text-sm"/>
         <UserName />
+        <UserAvatar />
+        <IoMdArrowDropdown className="p-0 text-sm md:hidden"/>
       </div>
     );
-  };
+  }; 
